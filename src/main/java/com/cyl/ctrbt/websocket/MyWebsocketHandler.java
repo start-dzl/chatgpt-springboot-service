@@ -2,6 +2,8 @@ package com.cyl.ctrbt.websocket;
 
 import cn.hutool.core.lang.UUID;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
 import com.cyl.ctrbt.openai.ChatGPTStrreamUtil;
 import com.cyl.ctrbt.openai.ChatGPTUtil;
 import com.cyl.ctrbt.openai.entity.chat.Message;
@@ -16,6 +18,9 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -67,8 +72,17 @@ public class MyWebsocketHandler extends AbstractWebSocketHandler {
         logger.info("Received message from client[ID:" + user +
                 "]; Content is [" + message.getPayload() + "].");
         TextMessage textMessage;
-        Message returnMessage = chatGPTUtil.chat(message.getPayload(), user);
-        textMessage= new TextMessage(returnMessage.getContent());
+        try {
+            Message returnMessage = chatGPTUtil.chat(message.getPayload(), user);
+            textMessage= new TextMessage(returnMessage.getContent());
+        }catch (Exception e) {
+            Map<String, String> hashMap = new HashMap<>();
+            hashMap.put("text", "我好像出了点问题，等我修复一下");
+            List<Map<String, String>> stringList = Arrays.asList(hashMap);
+            textMessage = new TextMessage(JSON.toJSONString(stringList));
+        }
+
+
         session.sendMessage(textMessage);
     }
 
